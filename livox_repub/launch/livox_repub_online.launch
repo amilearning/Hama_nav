@@ -1,0 +1,9 @@
+<launch>
+   <node pkg="livox_repub" type="livox_repub_online_node" name="livox_repub_online_node" output="screen" >
+      <param name="livox_raw_message_name"    type="string"   value="/livox/lidar" />
+      <param name="livox_points_message_name"    type="string"   value="/livox/points" />
+   </node>
+   
+   <node pkg="tf" type="static_transform_publisher" name="livox_to_baselinik" args="0 0 0 0 0 0  /livox/points /base_link  10"/>
+
+</launch>
