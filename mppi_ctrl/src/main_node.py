@@ -141,11 +141,12 @@ class Hound_HL_Control:
                 ## generate the control message:
                 now = time.time()
                 self.process_grid_map()
-                speed_limit = np.sqrt(
-                    (self.Dynamics_config["D"] * 9.8)
-                    / self.path_poses[self.current_wp_index, 3]
-                )
-                speed_limit = min(speed_limit, self.speed_limit)
+                # speed_limit = np.sqrt(
+                #     (self.Dynamics_config["D"] * 9.8)
+                #     / self.path_poses[self.current_wp_index, 3]
+                # )                
+                # speed_limit = min(speed_limit, self.speed_limit)
+                speed_limit =  self.speed_limit
                 lookahead = np.clip(
                     speed_limit, self.lookahead / 2, self.lookahead
                 )  ## speed dependent lookahead
@@ -468,7 +469,9 @@ class Hound_HL_Control:
         we expect the path to have a resolution of 0.2 meters or less.
         """
         ## get the poses from the path and store them into a numpy array:
-        self.local_goal_init = False
+        self.local_goal_init = False        
+        self.goal_init = True
+
         self.local_path_poses = np.zeros((len(path.poses), 4), dtype=np.float32)
         for i in range(len(path.poses)):
             self.local_path_poses[i, 0] = path.poses[i].pose.position.x
@@ -476,8 +479,9 @@ class Hound_HL_Control:
             self.local_path_poses[i, 2] = path.poses[i].pose.position.z                
         # self.local_path_poses, self.looping = self.interpolate_path(self.path_poses[:, :3])        
         self.goal = self.local_path_poses[-1, :3]
-        if self.path_received:
-            self.path_poses = self.local_path_poses
+        # if self.path_received:
+        self.path_poses = self.local_path_poses
+        self.controller.mppi.reset()
             
       
 

@@ -38,7 +38,7 @@ public:
 
   float speed_integral, speed_proportional, delta_t, last_throttle, throttle_delta;
   float speed_control_kp, speed_control_ki;
-  bool armed, manual_ctrl, offboard_ctrl;
+  bool armed, manual_ctrl, offboard_ctrl, joy_engaged;
 
   dynamic_reconfigure::Server<lowlevel_ctrl::LowLevelControlConfig> server;
   dynamic_reconfigure::Server<lowlevel_ctrl::LowLevelControlConfig>::CallbackType f;
@@ -78,6 +78,7 @@ public:
     manual_vel = 0;
     manual_steer = 0;
     manual_ctrl = false;
+    joy_engaged = false;
     erpm_gain = 1200.0f; 
     
     auto_steering = 0.0;
@@ -100,24 +101,28 @@ public:
 void joy_cb(const sensor_msgs::Joy::ConstPtr& msg)
 {
     // Print joystick axes values
-    if (msg->buttons[4]){
-      auto_steering = msg->axes[3]*steering_max;
-      if (msg->axes[1] < 0.1){
-        auto_wheelspeed = 0.0;  
-      }else{
-        auto_wheelspeed = msg->axes[1]*wheelspeed_max/3.0;
-      }
-     
-      
-    }else{
-            auto_wheelspeed = 0.0;
-    }
     if(armed){      
     joy_vehicle_cmd.header.stamp = ros::Time::now();
-    joy_vehicle_cmd.drive.steering_angle = auto_steering;
-    joy_vehicle_cmd.drive.speed = auto_wheelspeed;
+    joy_vehicle_cmd.drive.steering_angle = msg->axes[3]*steering_max;
+      if (msg->axes[1] < 0.1){        
+        joy_vehicle_cmd.drive.speed = 0.0;
+      }else{
+        joy_vehicle_cmd.drive.speed = msg->axes[1]*wheelspeed_max/3.0;
+      }
+    
     // joy_cmd_echo.publish(joy_vehicle_cmd);
     }
+
+
+    if (msg->buttons[4]){
+      joy_engaged = true;
+      auto_steering = joy_vehicle_cmd.drive.steering_angle;
+      auto_wheelspeed = joy_vehicle_cmd.drive.speed ;      
+    }else{
+      joy_engaged = false;
+        auto_wheelspeed = 0.0;
+    }
+   
     if(offboard_ctrl){      
     joy_vehicle_cmd.drive.jerk = 1.0;
     }
@@ -184,6 +189,9 @@ void ctrl_timer_cb(const ros::TimerEvent& event) {
         negative_mask = 0.01;
       }
 
+      if(!joy_engaged){
+          throttle_duty = 0.0;
+      }
       // tf2::Quaternion q_;
       
       // q_.setRPY(steering_setpoint, -1*steering_setpoint, -1*steering_setpoint);
