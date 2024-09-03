@@ -46,6 +46,8 @@ git clone https://github.com/amilearning/unstruct_navigation.git -b orin2
 git clone https://github.com/amilearning/unsup_seg_pkg.git -b orin
 git clone https://github.com/amilearning/Hama_nav.git 
 ```
+* Baseline Repository: Self-Supervised Segmentation " https://github.com/leggedrobotics/self_supervised_segmentation " 
+
 
 ### 2. Build the ROS Packages
 
